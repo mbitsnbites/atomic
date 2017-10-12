@@ -81,7 +81,7 @@ public:
   /// @param expected_val The expected value of the atomic object.
   /// @param new_val The new value to write to the atomic object.
   /// @returns True if new_value was written to the atomic object.
-  bool compare_and_swap(const T expected_val, const T new_val) {
+  bool compare_exchange(const T expected_val, const T new_val) {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     T e = expected_val;
     return __atomic_compare_exchange_n(
@@ -102,7 +102,7 @@ public:
   /// value.
   ///
   /// @param new_val The new value to write to the atomic object.
-  void set(const T new_val) {
+  void store(const T new_val) {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_store_n(&value_, new_val, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
@@ -115,7 +115,7 @@ public:
   /// @returns the current value of the atomic object.
   /// @note Be careful about how this is used, since any operations on the
   /// returned value are inherently non-atomic.
-  T value() const {
+  T load() const {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_load_n(&value_, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
