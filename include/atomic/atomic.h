@@ -22,8 +22,19 @@
 // For more information, please refer to <http://unlicense.org/>
 //-----------------------------------------------------------------------------
 
-#ifndef ATOMIC_H_
-#define ATOMIC_H_
+#ifndef ATOMIC_ATOMIC_H_
+#define ATOMIC_ATOMIC_H_
+
+// Macro for disallowing copying of an object.
+#if __cplusplus >= 201103L
+#define ATOMIC_DISALLOW_COPY(T) \
+  T(const T&) = delete;         \
+  T& operator=(const T&) = delete;
+#else
+#define ATOMIC_DISALLOW_COPY(T) \
+  T(const T&);                  \
+  T& operator=(const T&);
+#endif
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__xlc__)
 #define ATOMIC_USE_GCC_INTRINSICS
@@ -34,7 +45,7 @@
 #pragma intrinsic(_InterlockedDecrement)
 #pragma intrinsic(_InterlockedCompareExchange)
 #pragma intrinsic(_InterlockedExchange)
-#elif defined(__cplusplus) && (__cplusplus >= 201103L)
+#elif __cplusplus >= 201103L
 #define ATOMIC_USE_CPP11_ATOMIC
 #include <atomic>
 #else
@@ -132,6 +143,8 @@ private:
 #else
   std::atomic<T> value_;
 #endif
+
+  ATOMIC_DISALLOW_COPY(atomic);
 };
 
 }  // namespace atomic
@@ -141,4 +154,4 @@ private:
 #undef ATOMIC_USE_MSVC_INTRINSICS
 #undef ATOMIC_USE_CPP11_ATOMIC
 
-#endif  // ATOMIC_H_
+#endif  // ATOMIC_ATOMIC_H_

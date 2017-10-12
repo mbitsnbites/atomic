@@ -1,4 +1,5 @@
 #include "atomic/atomic.h"
+#include "atomic/spinlock.h"
 
 #include "doctest.h"
 
@@ -90,25 +91,24 @@ TEST_CASE("atomic<int> multi threaded operation") {
     CHECK(a.load() == -(NUM_THREADS * NUM_ITERATIONS));
   }
 
-  SUBCASE("Manual spin-lock with atomic<int> with 100 threads") {
-    atomic_int a;
+  SUBCASE("spinlock with 100 threads") {
+    atomic::spinlock lock;
     int usafe_value = 0;
 
     const int NUM_THREADS = 100;
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&a, &usafe_value]() {
+      threads.push_back(std::thread([&lock, &usafe_value]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           // Acquire (blocking).
-          while (!a.compare_exchange(0, 1))
-            ;
+          lock.aquire();
 
           // Update unsafe value (now protected by our acquired lock).
           ++usafe_value;
 
           // Release.
-          a.store(0);
+          lock.release();
         }
       }));
     }

@@ -7,6 +7,10 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Add the atomic library.
 add_library(atomic INTERFACE)
+target_sources(atomic INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/atomic/atomic.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/atomic/spinlock.h
+    )
 target_include_directories(atomic INTERFACE include)
 
 # Add the unit tests.
