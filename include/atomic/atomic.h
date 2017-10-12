@@ -34,9 +34,11 @@
 #pragma intrinsic(_InterlockedDecrement)
 #pragma intrinsic(_InterlockedCompareExchange)
 #pragma intrinsic(_InterlockedExchange)
-#else
+#elif defined(__cplusplus) && (__cplusplus >= 201103L)
 #define ATOMIC_USE_CPP11_ATOMIC
 #include <atomic>
+#else
+#error Unsupported compiler / system.
 #endif
 
 namespace atomic {
