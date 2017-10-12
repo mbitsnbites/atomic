@@ -2,10 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(atomic CXX)
 
-# Require C++11.
+# Optionally enable C++11 (we use C++11 as a fallback for some operations).
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Add the atomic library.
 add_library(atomic INTERFACE)
