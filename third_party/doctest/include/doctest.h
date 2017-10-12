@@ -62,7 +62,9 @@
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wunused-local-typedef"
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#if !defined(__has_warning) || __has_warning("-Wzero-as-null-pointer-constant")
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
 #pragma clang diagnostic ignored "-Wc++11-long-long"
 #endif // __clang__
 
@@ -103,8 +105,8 @@
 
 #define DOCTEST_VERSION_MAJOR 1
 #define DOCTEST_VERSION_MINOR 2
-#define DOCTEST_VERSION_PATCH 4
-#define DOCTEST_VERSION_STR "1.2.4"
+#define DOCTEST_VERSION_PATCH 5
+#define DOCTEST_VERSION_STR "1.2.5"
 
 #define DOCTEST_VERSION                                                                            \
     (DOCTEST_VERSION_MAJOR * 10000 + DOCTEST_VERSION_MINOR * 100 + DOCTEST_VERSION_PATCH)
@@ -3146,7 +3148,9 @@ namespace detail
 #pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#if !defined(__has_warning) || __has_warning("-Wzero-as-null-pointer-constant")
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
 #pragma clang diagnostic ignored "-Wc++11-long-long"
 #endif // __clang__
 
