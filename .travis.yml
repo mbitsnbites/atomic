@@ -1,0 +1,16 @@
+dist: trusty
+sudo: false
+language: cpp
+compiler:
+- clang
+- gcc
+os:
+- linux
+- osx
+script:
+- pwd
+- rm -rf build && mkdir -p build
+- cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
+- pwd
+- test/atomic_test
+
