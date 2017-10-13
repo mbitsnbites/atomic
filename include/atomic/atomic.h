@@ -73,7 +73,7 @@ public:
   }
 
   /// @brief Performs an atomic decrement operation (value - 1).
-  /// @returns The old value of the atomic object.
+  /// @returns The new value of the atomic object.
   T decrement() {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_sub_fetch(&value_, 1, __ATOMIC_SEQ_CST);
@@ -144,7 +144,7 @@ private:
   std::atomic<T> value_;
 #endif
 
-  ATOMIC_DISALLOW_COPY(atomic);
+  ATOMIC_DISALLOW_COPY(atomic)
 };
 
 }  // namespace atomic

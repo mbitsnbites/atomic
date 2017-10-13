@@ -51,14 +51,14 @@ private:
 
   atomic<int> value_;
 
-  ATOMIC_DISALLOW_COPY(spinlock);
+  ATOMIC_DISALLOW_COPY(spinlock)
 };
 
 class lock_guard {
 public:
   /// @brief The constructor acquires the lock.
   /// @param lock The spinlock that will be locked.
-  lock_guard(spinlock& lock) : lock_(lock) {
+  explicit lock_guard(spinlock& lock) : lock_(lock) {
     lock_.lock();
   }
 
@@ -70,7 +70,7 @@ public:
 private:
   spinlock& lock_;
 
-  ATOMIC_DISALLOW_COPY(lock_guard);
+  ATOMIC_DISALLOW_COPY(lock_guard)
 };
 
 }  // namespace atomic
