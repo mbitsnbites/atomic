@@ -40,17 +40,57 @@
 #define ATOMIC_USE_GCC_INTRINSICS
 #elif defined(_MSC_VER)
 #define ATOMIC_USE_MSVC_INTRINSICS
-#include <intrin.h>
-#pragma intrinsic(_InterlockedIncrement)
-#pragma intrinsic(_InterlockedDecrement)
-#pragma intrinsic(_InterlockedCompareExchange)
-#pragma intrinsic(_InterlockedExchange)
 #elif __cplusplus >= 201103L
 #define ATOMIC_USE_CPP11_ATOMIC
 #include <atomic>
 #else
 #error Unsupported compiler / system.
 #endif
+
+#if defined(ATOMIC_USE_MSVC_INTRINSICS)
+// Define which functions we need (don't include <intrin.h>).
+extern "C" {
+short _InterlockedIncrement16(short volatile*);
+long _InterlockedIncrement(long volatile*);
+__int64 _InterlockedIncrement64(__int64 volatile*);
+
+short _InterlockedDecrement16(short volatile*);
+long _InterlockedDecrement(long volatile*);
+__int64 _InterlockedDecrement64(__int64 volatile*);
+
+char _InterlockedExchange8(char volatile*, char);
+short _InterlockedExchange16(short volatile*, short);
+long __cdecl _InterlockedExchange(long volatile*, long);
+__int64 _InterlockedExchange64(__int64 volatile*, __int64);
+
+char _InterlockedCompareExchange8(char volatile*, char, char);
+short _InterlockedCompareExchange16(short volatile*, short, short);
+long __cdecl _InterlockedCompareExchange(long volatile*, long, long);
+__int64 _InterlockedCompareExchange64(__int64 volatile*, __int64, __int64);
+};
+
+// Define which functions we want to use as inline intriniscs.
+#pragma intrinsic(_InterlockedIncrement)
+#pragma intrinsic(_InterlockedIncrement16)
+
+#pragma intrinsic(_InterlockedDecrement)
+#pragma intrinsic(_InterlockedDecrement16)
+
+#pragma intrinsic(_InterlockedCompareExchange)
+#pragma intrinsic(_InterlockedCompareExchange8)
+#pragma intrinsic(_InterlockedCompareExchange16)
+
+#pragma intrinsic(_InterlockedExchange)
+#pragma intrinsic(_InterlockedExchange8)
+#pragma intrinsic(_InterlockedExchange16)
+
+#if defined(_M_X64)
+#pragma intrinsic(_InterlockedIncrement64)
+#pragma intrinsic(_InterlockedDecrement64)
+#pragma intrinsic(_InterlockedCompareExchange64)
+#pragma intrinsic(_InterlockedExchange64)
+#endif  // _M_X64
+#endif  // ATOMIC_USE_MSVC_INTRINSICS
 
 namespace atomic {
 template <typename T>
@@ -66,7 +106,25 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_add_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    return _InterlockedIncrement(&value_);
+    if (sizeof(T) == 1) {
+      // There's no _InterlockedIncrement8(). Can we do better?
+      char old_val;
+      do {
+        old_val = value_;
+      } while (_InterlockedCompareExchange8(
+                   reinterpret_cast<volatile char*>(&value_),
+                   old_val + 1,
+                   old_val) != old_val);
+      return old_val + 1;
+    } else if (sizeof(T) == 2) {
+      return _InterlockedIncrement16(
+          reinterpret_cast<volatile short*>(&value_));
+    } else if (sizeof(T) == 4) {
+      return _InterlockedIncrement(reinterpret_cast<volatile long*>(&value_));
+    } else if (sizeof(T) == 8) {
+      return _InterlockedIncrement64(
+          reinterpret_cast<volatile __int64*>(&value_));
+    }
 #else
     return ++value_;
 #endif
@@ -78,7 +136,25 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_sub_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    return _InterlockedDecrement(&value_);
+    if (sizeof(T) == 1) {
+      // There's no _InterlockedDecrement8(). Can we do better?
+      char old_val;
+      do {
+        old_val = value_;
+      } while (_InterlockedCompareExchange8(
+                   reinterpret_cast<volatile char*>(&value_),
+                   old_val - 1,
+                   old_val) != old_val);
+      return old_val - 1;
+    } else if (sizeof(T) == 2) {
+      return _InterlockedDecrement16(
+          reinterpret_cast<volatile short*>(&value_));
+    } else if (sizeof(T) == 4) {
+      return _InterlockedDecrement(reinterpret_cast<volatile long*>(&value_));
+    } else if (sizeof(T) == 8) {
+      return _InterlockedDecrement64(
+          reinterpret_cast<volatile __int64*>(&value_));
+    }
 #else
     return --value_;
 #endif
@@ -98,9 +174,23 @@ public:
     return __atomic_compare_exchange_n(
         &value_, &e, new_val, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    const T old_val =
-        _InterlockedCompareExchange(&value_, new_val, expected_val);
-    return (old_val == expected_val);
+    if (sizeof(T) == 1) {
+      const T old_val = _InterlockedCompareExchange8(
+          reinterpret_cast<volatile char*>(&value_), new_val, expected_val);
+      return (old_val == expected_val);
+    } else if (sizeof(T) == 2) {
+      const T old_val = _InterlockedCompareExchange16(
+          reinterpret_cast<volatile short*>(&value_), new_val, expected_val);
+      return (old_val == expected_val);
+    } else if (sizeof(T) == 4) {
+      const T old_val = _InterlockedCompareExchange(
+          reinterpret_cast<volatile long*>(&value_), new_val, expected_val);
+      return (old_val == expected_val);
+    } else if (sizeof(T) == 8) {
+      const T old_val = _InterlockedCompareExchange64(
+          reinterpret_cast<volatile __int64*>(&value_), new_val, expected_val);
+      return (old_val == expected_val);
+    }
 #else
     T e = expected_val;
     return value_.compare_exchange_weak(e, new_val);
@@ -117,7 +207,19 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_store_n(&value_, new_val, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    (void)_InterlockedExchange(&value_, new_val);
+    if (sizeof(T) == 1) {
+      (void)_InterlockedExchange8(reinterpret_cast<volatile char*>(&value_),
+                                  new_val);
+    } else if (sizeof(T) == 2) {
+      (void)_InterlockedExchange16(reinterpret_cast<volatile short*>(&value_),
+                                   new_val);
+    } else if (sizeof(T) == 4) {
+      (void)_InterlockedExchange(reinterpret_cast<volatile long*>(&value_),
+                                 new_val);
+    } else if (sizeof(T) == 8) {
+      (void)_InterlockedExchange64(reinterpret_cast<volatile __int64*>(&value_),
+                                   new_val);
+    }
 #else
     return value_.store(new_val);
 #endif

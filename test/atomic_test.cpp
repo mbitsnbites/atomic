@@ -58,7 +58,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&a]() {
+      threads.push_back(std::thread([&a, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           a.increment();
         }
@@ -78,7 +78,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&a]() {
+      threads.push_back(std::thread([&a, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           a.decrement();
         }
@@ -99,7 +99,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&lock, &unsafe_value]() {
+      threads.push_back(std::thread([&lock, &unsafe_value, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           // Acquire (blocking).
           lock.lock();
@@ -127,7 +127,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&lock, &unsafe_value]() {
+      threads.push_back(std::thread([&lock, &unsafe_value, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           atomic::lock_guard guard(lock);
 
