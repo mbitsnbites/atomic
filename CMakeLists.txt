@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.2)
 
 project(atomic CXX)
 
 # Optionally enable C++11 (we use C++11 as a fallback for some operations).
 set(CMAKE_CXX_STANDARD 11)
+
+# Work around a bug in CMake 3.2 find_package(Threads).
+if(${CMAKE_VERSION} VERSION_LESS "3.5.1")
+  enable_language(C)
+endif()
 
 # Add the atomic library.
 add_library(atomic INTERFACE)
