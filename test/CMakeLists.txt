@@ -1,3 +1,6 @@
+# We use doctest.
+add_subdirectory(doctest)
+
 # We require C++11 for the tests (to be able to create threads etc).
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

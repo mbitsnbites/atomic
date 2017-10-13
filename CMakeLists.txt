@@ -20,5 +20,4 @@ target_include_directories(atomic INTERFACE include)
 
 # Add the unit tests.
 enable_testing()
-add_subdirectory(third_party)
 add_subdirectory(test)
