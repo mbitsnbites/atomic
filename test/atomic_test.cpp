@@ -93,22 +93,22 @@ TEST_CASE("atomic<int> multi threaded operation") {
 
   SUBCASE("spinlock with 100 threads") {
     atomic::spinlock lock;
-    int usafe_value = 0;
+    int unsafe_value = 0;
 
     const int NUM_THREADS = 100;
     const int NUM_ITERATIONS = 1000;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-      threads.push_back(std::thread([&lock, &usafe_value]() {
+      threads.push_back(std::thread([&lock, &unsafe_value]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
           // Acquire (blocking).
-          lock.aquire();
+          lock.lock();
 
-          // Update unsafe value (now protected by our acquired lock).
-          ++usafe_value;
+          // Update the unsafe value (now protected by our acquired lock).
+          ++unsafe_value;
 
           // Release.
-          lock.release();
+          lock.unlock();
         }
       }));
     }
@@ -116,6 +116,30 @@ TEST_CASE("atomic<int> multi threaded operation") {
       threads[i].join();
     }
 
-    CHECK(usafe_value == (NUM_THREADS * NUM_ITERATIONS));
+    CHECK(unsafe_value == (NUM_THREADS * NUM_ITERATIONS));
+  }
+
+  SUBCASE("lock_guard with 100 threads") {
+    atomic::spinlock lock;
+    int unsafe_value = 0;
+
+    const int NUM_THREADS = 100;
+    const int NUM_ITERATIONS = 1000;
+    std::vector<std::thread> threads;
+    for (int i = 0; i < NUM_THREADS; i++) {
+      threads.push_back(std::thread([&lock, &unsafe_value]() {
+        for (int k = 0; k < NUM_ITERATIONS; ++k) {
+          atomic::lock_guard guard(lock);
+
+          // Update the unsafe value (now protected by our acquired lock).
+          ++unsafe_value;
+        }
+      }));
+    }
+    for (int i = 0; i < NUM_THREADS; i++) {
+      threads[i].join();
+    }
+
+    CHECK(unsafe_value == (NUM_THREADS * NUM_ITERATIONS));
   }
 }

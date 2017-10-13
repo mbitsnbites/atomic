@@ -35,7 +35,7 @@ public:
   /// @brief Acquire the lock (blocking).
   /// @note Trying to aquire a lock that is already held by the calling thread
   /// will dead-lock (block indefinitely).
-  void aquire() {
+  void lock() {
     while (!value_.compare_exchange(UNLOCKED, LOCKED))
       ;
   }
@@ -43,7 +43,7 @@ public:
   /// @brief Release the lock.
   /// @note It is an error to release a lock that has not been previously
   /// aquired.
-  void release() { value_.store(UNLOCKED); }
+  void unlock() { value_.store(UNLOCKED); }
 
 private:
   static const int UNLOCKED = 0;
@@ -53,6 +53,26 @@ private:
 
   ATOMIC_DISALLOW_COPY(spinlock);
 };
+
+class lock_guard {
+public:
+  /// @brief The constructor acquires the lock.
+  /// @param lock The spinlock that will be locked.
+  lock_guard(spinlock& lock) : lock_(lock) {
+    lock_.lock();
+  }
+
+  /// @brief The destructor releases the lock.
+  ~lock_guard() {
+    lock_.unlock();
+  }
+
+private:
+  spinlock& lock_;
+
+  ATOMIC_DISALLOW_COPY(lock_guard);
+};
+
 }  // namespace atomic
 
 #endif  // ATOMIC_SPINLOCK_H_
