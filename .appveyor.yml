@@ -3,5 +3,6 @@ build_script:
     - cd build
     - cmake ..
     - cmake --build . --config Release
-    - test/atomic_test
+test_script:
+    - ctest
 

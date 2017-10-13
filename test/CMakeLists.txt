@@ -9,4 +9,4 @@ find_package(Threads REQUIRED)
 # Add the unit test executable.
 add_executable(atomic_test atomic_test.cpp)
 target_link_libraries(atomic_test atomic doctest ${CMAKE_THREAD_LIBS_INIT})
-add_test(atmoic_test atmoic_test)
+add_test(atomic_test atomic_test)
