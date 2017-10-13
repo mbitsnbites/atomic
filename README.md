@@ -8,7 +8,7 @@ operations for C++. It is portable and easy to use.
 OS | master branch
 --- | ---
 Linux & macOS (GCC, Clang) | [![Build status](https://travis-ci.org/mbitsnbites/atomic.svg?branch=master)](https://travis-ci.org/mbitsnbites/atomic)
-Windows (MSVC) | [![Build status](https://ci.appveyor.com/api/projects/status/5d4rmehk6b2t1fee/branch/master?svg=true)](https://ci.appveyor.com/project/mbitsnbites/viewer/branch/master)
+Windows (MSVC) | [![Build status](https://ci.appveyor.com/api/projects/status/w502ka3k674wn25f?svg=true)](https://ci.appveyor.com/project/mbitsnbites/atomic/branch/master)
 
 
 ## Why avoid std::atomic?
