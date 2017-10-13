@@ -1,8 +1,9 @@
 # Atomic operations for C++
 
+[![Build status](https://travis-ci.org/mbitsnbites/atomic.svg?branch=master)](https://travis-ci.org/mbitsnbites/atomic)
+
 This is a very lightweight library that implements thread safe, atomic
 operations for C++. It is portable and easy to use.
-
 
 ## Why avoid std::atomic?
 
