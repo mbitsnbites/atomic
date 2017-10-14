@@ -3,50 +3,57 @@
 
 #include "doctest.h"
 
+#include <cstdint>
 #include <thread>
 #include <vector>
 
 typedef atomic::atomic<int> atomic_int;
 
-TEST_CASE("Basic atomic<int> single threaded operation") {
-  SUBCASE("atomic<int> initializes to zero") {
-    atomic_int a;
-    CHECK(a.load() == 0);
+typedef doctest::Types<int8_t, int16_t, int32_t, int64_t> atomic_test_types;
+
+TEST_CASE_TEMPLATE("Basic atomic<int> single threaded operation",
+                   T,
+                   atomic_test_types) {
+  SUBCASE("atomic<> initializes to zero") {
+    atomic::atomic<T> a;
+    CHECK(a.load() == static_cast<T>(0));
   }
 
-  SUBCASE("atomic<int> initializes to custom value") {
-    atomic_int a(42);
-    CHECK(a.load() == 42);
+  SUBCASE("atomic<> initializes to custom value") {
+    atomic::atomic<T> a(static_cast<T>(42));
+    CHECK(a.load() == static_cast<T>(42));
   }
 
-  SUBCASE("Incrementing atomic<int> works as expected") {
-    atomic_int a(0);
+  SUBCASE("Incrementing atomic<> works as expected") {
+    atomic::atomic<T> a(static_cast<T>(0));
     a.increment();
     a.increment();
     a.increment();
-    CHECK(a.load() == 3);
+    CHECK(a.load() == static_cast<T>(3));
   }
 
-  SUBCASE("Decrementing atomic<int> works as expected") {
-    atomic_int a(2);
+  SUBCASE("Decrementing atomic<> works as expected") {
+    atomic::atomic<T> a(5);
     a.decrement();
     a.decrement();
     a.decrement();
-    CHECK(a.load() == -1);
+    CHECK(a.load() == static_cast<T>(2));
   }
 
   SUBCASE("compare_exchange with non-expected value is a no-op") {
-    atomic_int a(5);
-    const bool did_swap = a.compare_exchange(4, 9);
+    atomic::atomic<T> a(static_cast<T>(5));
+    const bool did_swap =
+        a.compare_exchange(static_cast<T>(4), static_cast<T>(9));
     CHECK(did_swap == false);
-    CHECK(a.load() == 5);
+    CHECK(a.load() == static_cast<T>(5));
   }
 
   SUBCASE("compare_exchange with expected value performs swap") {
-    atomic_int a(5);
-    const bool did_swap = a.compare_exchange(5, 9);
+    atomic::atomic<T> a(static_cast<T>(5));
+    const bool did_swap =
+        a.compare_exchange(static_cast<T>(5), static_cast<T>(9));
     CHECK(did_swap == true);
-    CHECK(a.load() == 9);
+    CHECK(a.load() == static_cast<T>(9));
   }
 }
 
