@@ -163,6 +163,7 @@ struct interlocked<2, T> {
 
 template <typename T>
 struct interlocked<8, T> {
+#if defined(_M_X64)
   static inline T increment(T volatile* x) {
     return static_cast<T>(
         _InterlockedIncrement64(reinterpret_cast<volatile __int64*>(x)));
@@ -172,6 +173,31 @@ struct interlocked<8, T> {
     return static_cast<T>(
         _InterlockedDecrement64(reinterpret_cast<volatile __int64*>(x)));
   }
+#else
+  static inline T increment(T volatile* x) {
+    // There's no _InterlockedIncrement64() for 32-bit x86. Can we do better?
+    char old_val;
+    do {
+      old_val = static_cast<char>(*x);
+    } while (
+        _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*>(x),
+                                      old_val + 1,
+                                      old_val) != old_val);
+    return static_cast<T>(old_val + 1);
+  }
+
+  static inline T decrement(T volatile* x) {
+    // There's no _InterlockedDecrement64() for 32-bit x86. Can we do better?
+    char old_val;
+    do {
+      old_val = static_cast<char>(*x);
+    } while (
+        _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*>(x),
+                                      old_val - 1,
+                                      old_val) != old_val);
+    return static_cast<T>(old_val - 1);
+  }
+#endif  // _M_X64
 
   static inline T compare_exchange(T volatile* x,
                                    const T new_val,
