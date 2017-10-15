@@ -72,14 +72,14 @@ namespace atomic {
 namespace msvc {
 template <int N, typename T>
 struct interlocked {
+  ATOMIC_STATIC_ASSERT(N == 4, "Only types of size 1, 2, 4 or 8 are supported");
+
   static inline T increment(T volatile* x) {
-    // TODO(m): static_assert(N == 4)
     return static_cast<T>(
         _InterlockedIncrement(reinterpret_cast<volatile long*>(x)));
   }
 
   static inline T decrement(T volatile* x) {
-    // TODO(m): static_assert(N == 4)
     return static_cast<T>(
         _InterlockedDecrement(reinterpret_cast<volatile long*>(x)));
   }
@@ -87,52 +87,56 @@ struct interlocked {
   static inline T compare_exchange(T volatile* x,
                                    const T new_val,
                                    const T expected_val) {
-    // TODO(m): static_assert(N == 4)
-    return static_cast<T>(_InterlockedCompareExchange(
-        reinterpret_cast<volatile long*>(x), new_val, expected_val));
+    return static_cast<T>(
+        _InterlockedCompareExchange(reinterpret_cast<volatile long*>(x),
+                                    static_cast<const long>(new_val),
+                                    static_cast<const long>(expected_val)));
   }
 
   static inline T exchange(T volatile* x, const T new_val) {
-    // TODO(m): static_assert(N == 4)
-    return static_cast<T>(
-        _InterlockedExchange(reinterpret_cast<volatile long*>(x), new_val));
+    return static_cast<T>(_InterlockedExchange(
+        reinterpret_cast<volatile long*>(x), static_cast<const long>(new_val)));
   }
 };
 
 template <typename T>
 struct interlocked<1, T> {
   static inline T increment(T volatile* x) {
-    // There's no _InterlockedIncrement8(). Can we do better?
-    char old_val;
+    // There's no _InterlockedIncrement8().
+    char old_val, new_val;
     do {
       old_val = static_cast<char>(*x);
+      new_val = old_val + static_cast<char>(1);
     } while (_InterlockedCompareExchange8(reinterpret_cast<volatile char*>(x),
-                                          old_val + 1,
+                                          new_val,
                                           old_val) != old_val);
-    return static_cast<T>(old_val + 1);
+    return static_cast<T>(new_val);
   }
 
   static inline T decrement(T volatile* x) {
-    // There's no _InterlockedDecrement8(). Can we do better?
-    char old_val;
+    // There's no _InterlockedDecrement8().
+    char old_val, new_val;
     do {
-      old_val = static_cast<T>(*x);
+      old_val = static_cast<char>(*x);
+      new_val = old_val - static_cast<char>(1);
     } while (_InterlockedCompareExchange8(reinterpret_cast<volatile char*>(x),
-                                          old_val - 1,
+                                          new_val,
                                           old_val) != old_val);
-    return static_cast<T>(old_val - 1);
+    return static_cast<T>(new_val);
   }
 
   static inline T compare_exchange(T volatile* x,
                                    const T new_val,
                                    const T expected_val) {
-    return static_cast<T>(_InterlockedCompareExchange8(
-        reinterpret_cast<volatile char*>(x), new_val, expected_val));
+    return static_cast<T>(
+        _InterlockedCompareExchange8(reinterpret_cast<volatile char*>(x),
+                                     static_cast<const char>(new_val),
+                                     static_cast<const char>(expected_val)));
   }
 
   static inline T exchange(T volatile* x, const T new_val) {
-    return static_cast<T>(
-        _InterlockedExchange8(reinterpret_cast<volatile char*>(x), new_val));
+    return static_cast<T>(_InterlockedExchange8(
+        reinterpret_cast<volatile char*>(x), static_cast<const char>(new_val)));
   }
 };
 
@@ -151,13 +155,16 @@ struct interlocked<2, T> {
   static inline T compare_exchange(T volatile* x,
                                    const T new_val,
                                    const T expected_val) {
-    return static_cast<T>(_InterlockedCompareExchange16(
-        reinterpret_cast<volatile short*>(x), new_val, expected_val));
+    return static_cast<T>(
+        _InterlockedCompareExchange16(reinterpret_cast<volatile short*>(x),
+                                      static_cast<const short>(new_val),
+                                      static_cast<const short>(expected_val)));
   }
 
   static inline T exchange(T volatile* x, const T new_val) {
     return static_cast<T>(
-        _InterlockedExchange16(reinterpret_cast<volatile short*>(x), new_val));
+        _InterlockedExchange16(reinterpret_cast<volatile short*>(x),
+                               static_cast<const short>(new_val)));
   }
 };
 
@@ -175,27 +182,27 @@ struct interlocked<8, T> {
   }
 #else
   static inline T increment(T volatile* x) {
-    // There's no _InterlockedIncrement64() for 32-bit x86. Can we do better?
-    char old_val;
+    // There's no _InterlockedIncrement64() for 32-bit x86.
+    __int64 old_val, new_val;
     do {
-      old_val = static_cast<char>(*x);
-    } while (
-        _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*>(x),
-                                      old_val + 1,
-                                      old_val) != old_val);
-    return static_cast<T>(old_val + 1);
+      old_val = static_cast<__int64>(*x);
+      new_val = old_val + static_cast<__int64>(1);
+    } while (_InterlockedCompareExchange64(
+                 reinterpret_cast<volatile __int64*>(x), new_val, old_val) !=
+             old_val);
+    return static_cast<T>(new_val);
   }
 
   static inline T decrement(T volatile* x) {
-    // There's no _InterlockedDecrement64() for 32-bit x86. Can we do better?
-    char old_val;
+    // There's no _InterlockedDecrement64() for 32-bit x86.
+    __int64 old_val, new_val;
     do {
-      old_val = static_cast<char>(*x);
-    } while (
-        _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*>(x),
-                                      old_val - 1,
-                                      old_val) != old_val);
-    return static_cast<T>(old_val - 1);
+      old_val = static_cast<__int64>(*x);
+      new_val = old_val - static_cast<__int64>(1);
+    } while (_InterlockedCompareExchange64(
+                 reinterpret_cast<volatile __int64*>(x), new_val, old_val) !=
+             old_val);
+    return static_cast<T>(new_val);
   }
 #endif  // _M_X64
 
@@ -203,12 +210,15 @@ struct interlocked<8, T> {
                                    const T new_val,
                                    const T expected_val) {
     return static_cast<T>(_InterlockedCompareExchange64(
-        reinterpret_cast<volatile __int64*>(x), new_val, expected_val));
+        reinterpret_cast<volatile __int64*>(x),
+        static_cast<const __int64>(new_val),
+        static_cast<const __int64>(expected_val)));
   }
 
   static inline T exchange(T volatile* x, const T new_val) {
-    return static_cast<T>(_InterlockedExchange64(
-        reinterpret_cast<volatile __int64*>(x), new_val));
+    return static_cast<T>(
+        _InterlockedExchange64(reinterpret_cast<volatile __int64*>(x),
+                               static_cast<const __int64>(new_val)));
   }
 };
 

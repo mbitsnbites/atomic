@@ -30,7 +30,7 @@
 namespace atomic {
 class spinlock {
 public:
-  spinlock() {}
+  spinlock() : value_(0) {}
 
   /// @brief Acquire the lock (blocking).
   /// @note Trying to aquire a lock that is already held by the calling thread

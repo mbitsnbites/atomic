@@ -36,6 +36,26 @@
   T& operator=(const T&);
 #endif
 
+// A portable static assert.
+#if __cplusplus >= 201103L
+#define ATOMIC_STATIC_ASSERT(condition, message) \
+  static_assert((condition), message)
+#else
+// Based on: http://stackoverflow.com/a/809465/5778708
+#define ATOMIC_STATIC_ASSERT(condition, message) \
+  _impl_STATIC_ASSERT_LINE(condition, __LINE__)
+#define _impl_PASTE(a, b) a##b
+#ifdef __GNUC__
+#define _impl_UNUSED __attribute__((__unused__))
+#else
+#define _impl_UNUSED
+#endif
+#define _impl_STATIC_ASSERT_LINE(condition, line) \
+  typedef char _impl_PASTE(                       \
+      STATIC_ASSERT_failed_,                      \
+      line)[(2 * static_cast<int>(!!(condition))) - 1] _impl_UNUSED
+#endif
+
 #if defined(__GNUC__) || defined(__clang__) || defined(__xlc__)
 #define ATOMIC_USE_GCC_INTRINSICS
 #elif defined(_MSC_VER)
@@ -52,7 +72,11 @@ namespace atomic {
 template <typename T>
 class atomic {
 public:
-  atomic() : value_(0) {}
+  ATOMIC_STATIC_ASSERT(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+                           sizeof(T) == 8,
+                       "Only types of size 1, 2, 4 or 8 are supported");
+
+  atomic() : value_(static_cast<T>(0)) {}
 
   explicit atomic(const T value) : value_(value) {}
 
