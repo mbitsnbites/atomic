@@ -33,7 +33,7 @@ public:
   spinlock() : value_(0) {}
 
   /// @brief Acquire the lock (blocking).
-  /// @note Trying to aquire a lock that is already held by the calling thread
+  /// @note Trying to acquire a lock that is already held by the calling thread
   /// will dead-lock (block indefinitely).
   void lock() {
     while (!value_.compare_exchange(UNLOCKED, LOCKED))
@@ -42,7 +42,7 @@ public:
 
   /// @brief Release the lock.
   /// @note It is an error to release a lock that has not been previously
-  /// aquired.
+  /// acquired.
   void unlock() { value_.store(UNLOCKED); }
 
 private:
