@@ -86,7 +86,7 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_add_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    return msvc::interlocked_increment_n(&value_);
+    return msvc::interlocked<T>::increment(&value_);
 #else
     return ++value_;
 #endif
@@ -98,7 +98,7 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_sub_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    return msvc::interlocked_decrement_n(&value_);
+    return msvc::interlocked<T>::decrement(&value_);
 #else
     return --value_;
 #endif
@@ -119,7 +119,7 @@ public:
         &value_, &e, new_val, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
     const T old_val =
-        msvc::interlocked_compare_exchange_n(&value_, new_val, expected_val);
+        msvc::interlocked<T>::compare_exchange(&value_, new_val, expected_val);
     return (old_val == expected_val);
 #else
     T e = expected_val;
@@ -137,7 +137,7 @@ public:
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     __atomic_store_n(&value_, new_val, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
-    (void)msvc::interlocked_exchange_n(&value_, new_val);
+    (void)msvc::interlocked<T>::exchange(&value_, new_val);
 #else
     value_.store(new_val);
 #endif

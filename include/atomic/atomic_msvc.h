@@ -70,37 +70,12 @@ __int64 _InterlockedCompareExchange64(__int64 volatile*, __int64, __int64);
 
 namespace atomic {
 namespace msvc {
-template <int N, typename T>
+template <typename T, size_t N = sizeof(T)>
 struct interlocked {
-  ATOMIC_STATIC_ASSERT(N == 4, "Only types of size 1, 2, 4 or 8 are supported");
-
-  static inline T increment(T volatile* x) {
-    return static_cast<T>(
-        _InterlockedIncrement(reinterpret_cast<volatile long*>(x)));
-  }
-
-  static inline T decrement(T volatile* x) {
-    return static_cast<T>(
-        _InterlockedDecrement(reinterpret_cast<volatile long*>(x)));
-  }
-
-  static inline T compare_exchange(T volatile* x,
-                                   const T new_val,
-                                   const T expected_val) {
-    return static_cast<T>(
-        _InterlockedCompareExchange(reinterpret_cast<volatile long*>(x),
-                                    static_cast<const long>(new_val),
-                                    static_cast<const long>(expected_val)));
-  }
-
-  static inline T exchange(T volatile* x, const T new_val) {
-    return static_cast<T>(_InterlockedExchange(
-        reinterpret_cast<volatile long*>(x), static_cast<const long>(new_val)));
-  }
 };
 
 template <typename T>
-struct interlocked<1, T> {
+struct interlocked<T, 1> {
   static inline T increment(T volatile* x) {
     // There's no _InterlockedIncrement8().
     char old_val, new_val;
@@ -141,7 +116,7 @@ struct interlocked<1, T> {
 };
 
 template <typename T>
-struct interlocked<2, T> {
+struct interlocked<T, 2> {
   static inline T increment(T volatile* x) {
     return static_cast<T>(
         _InterlockedIncrement16(reinterpret_cast<volatile short*>(x)));
@@ -169,7 +144,34 @@ struct interlocked<2, T> {
 };
 
 template <typename T>
-struct interlocked<8, T> {
+struct interlocked<T, 4> {
+  static inline T increment(T volatile* x) {
+    return static_cast<T>(
+        _InterlockedIncrement(reinterpret_cast<volatile long*>(x)));
+  }
+
+  static inline T decrement(T volatile* x) {
+    return static_cast<T>(
+        _InterlockedDecrement(reinterpret_cast<volatile long*>(x)));
+  }
+
+  static inline T compare_exchange(T volatile* x,
+                                   const T new_val,
+                                   const T expected_val) {
+    return static_cast<T>(
+        _InterlockedCompareExchange(reinterpret_cast<volatile long*>(x),
+                                    static_cast<const long>(new_val),
+                                    static_cast<const long>(expected_val)));
+  }
+
+  static inline T exchange(T volatile* x, const T new_val) {
+    return static_cast<T>(_InterlockedExchange(
+        reinterpret_cast<volatile long*>(x), static_cast<const long>(new_val)));
+  }
+};
+
+template <typename T>
+struct interlocked<T, 8> {
 #if defined(_M_X64)
   static inline T increment(T volatile* x) {
     return static_cast<T>(
@@ -221,29 +223,6 @@ struct interlocked<8, T> {
                                static_cast<const __int64>(new_val)));
   }
 };
-
-template <typename T>
-inline T interlocked_increment_n(T volatile* x) {
-  return interlocked<sizeof(T), T>::increment(x);
-}
-
-template <typename T>
-inline T interlocked_decrement_n(T volatile* x) {
-  return interlocked<sizeof(T), T>::decrement(x);
-}
-
-template <typename T>
-inline T interlocked_compare_exchange_n(T volatile* x,
-                                        const T new_val,
-                                        const T expected_val) {
-  return interlocked<sizeof(T), T>::compare_exchange(x, new_val, expected_val);
-}
-
-template <typename T>
-inline T interlocked_exchange_n(T volatile* x, const T new_val) {
-  return interlocked<sizeof(T), T>::exchange(x, new_val);
-}
-
 }  // namespace msvc
 }  // namespace atomic
 
