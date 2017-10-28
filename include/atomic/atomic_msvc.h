@@ -172,18 +172,11 @@ struct interlocked<T, 4> {
 
 template <typename T>
 struct interlocked<T, 8> {
-#if defined(_M_X64)
   static inline T increment(T volatile* x) {
+#if defined(_M_X64)
     return static_cast<T>(
         _InterlockedIncrement64(reinterpret_cast<volatile __int64*>(x)));
-  }
-
-  static inline T decrement(T volatile* x) {
-    return static_cast<T>(
-        _InterlockedDecrement64(reinterpret_cast<volatile __int64*>(x)));
-  }
 #else
-  static inline T increment(T volatile* x) {
     // There's no _InterlockedIncrement64() for 32-bit x86.
     __int64 old_val, new_val;
     do {
@@ -193,9 +186,14 @@ struct interlocked<T, 8> {
                  reinterpret_cast<volatile __int64*>(x), new_val, old_val) !=
              old_val);
     return static_cast<T>(new_val);
+#endif  // _M_X64
   }
 
   static inline T decrement(T volatile* x) {
+#if defined(_M_X64)
+    return static_cast<T>(
+        _InterlockedDecrement64(reinterpret_cast<volatile __int64*>(x)));
+#else
     // There's no _InterlockedDecrement64() for 32-bit x86.
     __int64 old_val, new_val;
     do {
@@ -205,8 +203,8 @@ struct interlocked<T, 8> {
                  reinterpret_cast<volatile __int64*>(x), new_val, old_val) !=
              old_val);
     return static_cast<T>(new_val);
-  }
 #endif  // _M_X64
+  }
 
   static inline T compare_exchange(T volatile* x,
                                    const T new_val,
@@ -218,9 +216,20 @@ struct interlocked<T, 8> {
   }
 
   static inline T exchange(T volatile* x, const T new_val) {
+#if defined(_M_X64)
     return static_cast<T>(
         _InterlockedExchange64(reinterpret_cast<volatile __int64*>(x),
                                static_cast<const __int64>(new_val)));
+#else
+    // There's no _InterlockedExchange64 for 32-bit x86.
+    __int64 old_val;
+    do {
+      old_val = static_cast<__int64>(*x);
+    } while (_InterlockedCompareExchange64(
+                 reinterpret_cast<volatile __int64*>(x), new_val, old_val) !=
+             old_val);
+    return static_cast<T>(old_val);
+#endif  // _M_X64
   }
 };
 }  // namespace msvc
