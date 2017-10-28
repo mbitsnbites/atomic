@@ -26,17 +26,17 @@ TEST_CASE_TEMPLATE("Basic atomic<int> single threaded operation",
 
   SUBCASE("Incrementing atomic<> works as expected") {
     atomic::atomic<T> a(static_cast<T>(0));
-    a.increment();
-    a.increment();
-    a.increment();
+    ++a;
+    ++a;
+    ++a;
     CHECK(a.load() == static_cast<T>(3));
   }
 
   SUBCASE("Decrementing atomic<> works as expected") {
     atomic::atomic<T> a(5);
-    a.decrement();
-    a.decrement();
-    a.decrement();
+    --a;
+    --a;
+    --a;
     CHECK(a.load() == static_cast<T>(2));
   }
 
@@ -67,7 +67,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     for (int i = 0; i < NUM_THREADS; i++) {
       threads.push_back(std::thread([&a, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
-          a.increment();
+          ++a;
         }
       }));
     }
@@ -87,7 +87,7 @@ TEST_CASE("atomic<int> multi threaded operation") {
     for (int i = 0; i < NUM_THREADS; i++) {
       threads.push_back(std::thread([&a, &NUM_ITERATIONS]() {
         for (int k = 0; k < NUM_ITERATIONS; ++k) {
-          a.decrement();
+          --a;
         }
       }));
     }

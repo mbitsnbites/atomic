@@ -82,7 +82,7 @@ public:
 
   /// @brief Performs an atomic increment operation (value + 1).
   /// @returns The new value of the atomic object.
-  T increment() {
+  T operator++() {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_add_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
@@ -94,7 +94,7 @@ public:
 
   /// @brief Performs an atomic decrement operation (value - 1).
   /// @returns The new value of the atomic object.
-  T decrement() {
+  T operator--() {
 #if defined(ATOMIC_USE_GCC_INTRINSICS)
     return __atomic_sub_fetch(&value_, 1, __ATOMIC_SEQ_CST);
 #elif defined(ATOMIC_USE_MSVC_INTRINSICS)
@@ -155,6 +155,15 @@ public:
 #else
     return value_;
 #endif
+  }
+
+  T operator=(const T new_value) {
+    store(new_value);
+    return new_value;
+  }
+
+  operator T() const {
+    return load();
   }
 
 private:
