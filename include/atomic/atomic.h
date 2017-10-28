@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // This is free and unencumbered software released into the public domain.
 //
 // Anyone is free to copy, modify, publish, use, compile, sell, or distribute
@@ -154,6 +154,23 @@ public:
     return value_;
 #else
     return value_;
+#endif
+  }
+
+  /// @brief Performs an atomic exchange operation.
+  ///
+  /// The value of the atomic object is unconditionally updated to the new
+  /// value, and the old value is returned.
+  ///
+  /// @param new_val The new value to write to the atomic object.
+  /// @returns the old value.
+  T exchange(const T new_val) {
+#if defined(ATOMIC_USE_GCC_INTRINSICS)
+    return __atomic_exchange_n(&value_, new_val, __ATOMIC_SEQ_CST);
+#elif defined(ATOMIC_USE_MSVC_INTRINSICS)
+    return msvc::interlocked<T>::exchange(&value_, new_val);
+#else
+    return value_.exchange(new_val);
 #endif
   }
 

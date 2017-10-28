@@ -55,6 +55,13 @@ TEST_CASE_TEMPLATE("Basic atomic<int> single threaded operation",
     CHECK(did_swap == true);
     CHECK(a.load() == static_cast<T>(9));
   }
+
+  SUBCASE("exchange updates and returns the old value") {
+    atomic::atomic<T> a(static_cast<T>(5));
+    const T old_value = a.exchange(static_cast<T>(9));
+    CHECK(old_value == static_cast<T>(5));
+    CHECK(a.load() == static_cast<T>(9));
+  }
 }
 
 TEST_CASE("atomic<int> multi threaded operation") {
