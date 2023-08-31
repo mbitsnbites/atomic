@@ -1,3 +1,5 @@
+## ⚠️ This repository has moved to: https://gitlab.com/mbitsnbites/atomic
+
 # Atomic operations for C++
 
 This is a very lightweight library that implements thread safe, atomic
